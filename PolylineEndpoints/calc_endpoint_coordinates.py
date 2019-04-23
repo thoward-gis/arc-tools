@@ -23,13 +23,13 @@ def haversine(point1, point2):
     """
     lat1, long1 = point1
     lat2, long2 = point2
-    diffLat = math.radians(lat2 - lat1)
-    diffLong = math.radians(long2 - long1)
-    radius = 6378137 # earth radius in meters
+    diff_lat = math.radians(lat2 - lat1)
+    diff_long = math.radians(long2 - long1)
+    radius = 6378137  # earth radius in meters
 
-    a = (math.sin(diffLat/2) * math.sin(diffLat/2) +
-            math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
-            math.sin(diffLong/2) * math.sin(diffLong/2))
+    a = (math.sin(diff_lat/2) * math.sin(diff_lat/2) +
+         math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) *
+         math.sin(diff_long/2) * math.sin(diff_long/2))
     c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
     d = c * radius
     return d
@@ -48,7 +48,7 @@ def find_distant_pts(allpts, beginpts, endpts, second_check=False):
         for pt in allpts:
             if allpts.count(pt) == 1:
                 for pt2 in allpts:
-                    # don't consider duplicate endpoints unless explicitly directed
+                    # don't consider duplicate (coincident) endpoints unless explicitly directed
                     if allpts.count(pt2) == 1 or second_check is True:
                         test_distance = haversine(pt, pt2)
                         if test_distance > biggest_distance:
@@ -89,7 +89,7 @@ def calc_endpoint_coord(in_polyline):
         sys.exit()
 
     # iterate thru each polyline feature using update cursor
-    with arcpy.da.UpdateCursor(in_polyline, ['SHAPE@', beginlong, beginlat, endlong, endlat]) as cur:
+    with arcpy.da.UpdateCursor(in_polyline, ['SHAPE@', beginlat, beginlong, endlat, endlong]) as cur:
         for row in cur:
             # find endpoints for each part in multipart line
             beginpts = [(part.getObject(0).Y, part.getObject(0).X) for part in row[0]]
@@ -102,10 +102,10 @@ def calc_endpoint_coord(in_polyline):
             if beg == end:
                 beg, end = find_distant_pts(allpts, beginpts, endpts, True)
 
-            row[1] = beg[1]
-            row[2] = beg[0]
-            row[3] = end[1]
-            row[4] = end[0]
+            row[1] = beg[0]
+            row[2] = beg[1]
+            row[3] = end[0]
+            row[4] = end[1]
             cur.updateRow(row)
 
 
