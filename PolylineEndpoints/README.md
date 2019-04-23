@@ -9,3 +9,5 @@ Geoprocessing tool that calculates the endpoint coordinates of ALL polyline type
 
 **Output Feature Class** | *Feature Class* | optional input
 * The output polyline feature class. User has option to make copy of input dataset and insert calculated values to the copy leaving the input dataset untouched.
+
+![DatasetExtentToFeatures Image](https://github.com/thoward-gis/arc-tools/blob/master/PolylineEndpoints/calc_endpoint_coordinates_help.png  "With Single and Multipart Polyline Inputs, endpoints are calculated")
