@@ -14,6 +14,7 @@ Optional Arguments:
 import arcpy
 import sys
 import math
+import traceback
 
 
 def haversine(point1, point2):
@@ -110,11 +111,17 @@ def calc_endpoint_coord(in_polyline):
 
 
 if __name__ == '__main__':
-    # Get Parameters
-    in_polyline = arcpy.GetParameterAsText(0)
-    create_new = arcpy.GetParameterAsText(1)
-    output_fc = arcpy.GetParameterAsText(2)
-    if create_new:
-        in_polyline = arcpy.CopyFeatures_management(in_polyline, output_fc)
-    calc_endpoint_coord(in_polyline)
-    arcpy.AddMessage("Done!")
+    try:
+        # Get parameters
+        in_polyline = arcpy.GetParameterAsText(0)
+        create_new = arcpy.GetParameterAsText(1)
+        output_fc = arcpy.GetParameterAsText(2)
+        # Create new output feature class if user specifies
+        if create_new:
+            in_polyline = arcpy.CopyFeatures_management(in_polyline, output_fc)
+        # Calculate endpoint coordinates    
+        calc_endpoint_coord(in_polyline)
+        arcpy.AddMessage("Done!")
+    
+    except Exception as e:
+        arcpy.AddError("ERROR! Unhandled exception! Exception: {}".format(str(e)))
