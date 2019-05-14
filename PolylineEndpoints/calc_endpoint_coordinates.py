@@ -84,10 +84,10 @@ def calc_endpoint_coord(in_polyline):
         if f not in existing:
             arcpy.AddField_management(in_polyline, f, "DOUBLE")
         else:
-            arcpy.AddError("ERROR - field named {} already exists".format(f))
+            arcpy.AddError(" *ERROR* - field named {} already exists".format(f))
             field_error = True
     if field_error:
-        sys.exit()
+        sys.exit(1)
 
     # iterate thru each polyline feature using update cursor
     with arcpy.da.UpdateCursor(in_polyline, ['SHAPE@', beginlat, beginlong, endlat, endlong]) as cur:
@@ -117,7 +117,7 @@ if __name__ == '__main__':
         create_new = arcpy.GetParameterAsText(1)
         output_fc = arcpy.GetParameterAsText(2)
         # Create new output feature class if user specifies
-        if create_new:
+        if create_new and create_new != 'false':
             in_polyline = arcpy.CopyFeatures_management(in_polyline, output_fc)
         # Calculate endpoint coordinates    
         calc_endpoint_coord(in_polyline)
@@ -125,3 +125,6 @@ if __name__ == '__main__':
     
     except Exception as e:
         arcpy.AddError("ERROR! Unhandled exception! Exception: {}".format(str(e)))
+        # clean up new feature class if exists
+        if arcpy.Exists(output_fc):
+            arcpy.Delete_management(output_fc)
