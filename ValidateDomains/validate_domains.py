@@ -46,16 +46,25 @@ def validate_domains(fc, domain_dict):
                 if list_of_fields[idx].domain:
                     if row[idx] not in domain_dict[list_of_fields[idx].domain].keys():
                         error_message += str(list_of_field_names[idx]) + " contains invalid value - " + str(row[idx]) + ", "
-            if error_message:##############################
-                arcpy.AddMessage(error_message)#############################
-            row[list_of_field_names.index("ERROR_MESSAGE")] = error_message
+            if error_message:
+                row[list_of_field_names.index("ERROR_MESSAGE")] = error_message
+            else:
+                row[list_of_field_names.index("ERROR_MESSAGE")] = None
             cur.updateRow(row)
-        del cur # get rid of any remaining locks
+        del cur  # get rid of any remaining locks
 
 
-def del_error_field():
-    """ delete ERROR_MESSAGE field - future enhancement"""
-    pass
+def del_error_field(fc, field="ERROR_MESSAGE"):
+    """ delete ERROR_MESSAGE field - if no errors exist"""
+    # find unique values list from field - ignore NULL, None values
+    with arcpy.da.SearchCursor(fc, [field]) as cur:
+        field_values = sorted({row[0] for row in cur if row[0]})
+    if field_values:
+        arcpy.DeleteField_management(fc, field)
+        arcpy.AddMessage("No Domain Errors found! ERROR_MESSAGE field has been removed.")
+    else:
+        arcpy.AddMessage("Domain Errors Found! See ERROR_MESSAGE field added to input.")
+
 
 #####################################################
 ################  MAIN  #############################
@@ -64,11 +73,6 @@ if __name__ == '__main__':
     try:
         # Get parameters
         in_fc = arcpy.GetParameterAsText(0)
-        # create_new = arcpy.GetParameterAsText(1)
-        # out_fc = arcpy.GetParameterAsText(2)
-        # Create new output feature class if user specifies
-        # if create_new:
-        #     in_fc = arcpy.CopyFeatures_management(in_fc, out_fc)
         # create dictionary of domains
         domain_dic = dict_of_domains(in_fc)
         arcpy.AddMessage(domain_dic)
@@ -76,12 +80,9 @@ if __name__ == '__main__':
         if domain_dic:
             validate_domains(in_fc, domain_dic)
             # delete ERROR_MESSAGE field if no problems found
-            # del_error_field()
+            del_error_field(in_fc)
         else:
             arcpy.AddMessage("The workspace selected does not contain any domains!")
-            # clean up out_fc if it was created
-            arcpy.Delete_management(out_fc)
-        # delete ERROR_MESSAGE field if no problems found
 
         arcpy.AddMessage("Done!")
 
