@@ -59,7 +59,7 @@ def del_error_field(fc, field="ERROR_MESSAGE"):
     # find unique values list from field - ignore NULL, None values
     with arcpy.da.SearchCursor(fc, [field]) as cur:
         field_values = sorted({row[0] for row in cur if row[0]})
-    if field_values:
+    if not field_values:
         arcpy.DeleteField_management(fc, field)
         arcpy.AddMessage("No Domain Errors found! ERROR_MESSAGE field has been removed.")
     else:
@@ -75,7 +75,7 @@ if __name__ == '__main__':
         in_fc = arcpy.GetParameterAsText(0)
         # create dictionary of domains
         domain_dic = dict_of_domains(in_fc)
-        arcpy.AddMessage(domain_dic)
+        # arcpy.AddMessage(domain_dic)
         # validate domains if domains exist
         if domain_dic:
             validate_domains(in_fc, domain_dic)
