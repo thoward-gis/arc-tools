@@ -12,14 +12,22 @@ If errors are found, an ERROR_MESSAGE field is added to the input feature class 
 """
 import arcpy
 import os
+import traceback
 
 
 def dict_of_domains(fc):
     """
     create dictionary from domains to use to check attribute values
     """
-    domains = arcpy.da.ListDomains(os.path.dirname(fc))
-    return {domain.name: domain.codedValues for domain in domains}
+    # need to find root database (GDB or SDE)
+    db_root = os.path.dirname(fc)
+    while db_root[-4:].lower() != '.gdb' and db_root[-4:].lower() != '.sde':
+        old_db_root = db_root  # protect against infinite loop
+        db_root = os.path.dirname(db_root)
+        if old_db_root == db_root:  # protect against infinite loop
+            break
+    arcpy.AddMessage("Retrieving Domains from  " + str(db_root))
+    return {domain.name: domain.codedValues for domain in arcpy.da.ListDomains(db_root)}
 
 
 def validate_domains(fc, domain_dict):
@@ -47,7 +55,7 @@ def validate_domains(fc, domain_dict):
                     if row[idx] not in domain_dict[list_of_fields[idx].domain].keys():
                         error_message += str(list_of_field_names[idx]) + " contains invalid value - " + str(row[idx]) + ", "
             if error_message:
-                row[list_of_field_names.index("ERROR_MESSAGE")] = error_message
+                row[list_of_field_names.index("ERROR_MESSAGE")] = error_message[:-2]  # drop last comma
             else:
                 row[list_of_field_names.index("ERROR_MESSAGE")] = None
             cur.updateRow(row)
@@ -86,5 +94,21 @@ if __name__ == '__main__':
 
         arcpy.AddMessage("Done!")
 
-    except Exception as e:
-        arcpy.AddError("ERROR! Unhandled exception! Exception: {}".format(str(e)))
+    except arcpy.ExecuteError:
+        # Get the tool error messages
+        msgs = arcpy.GetMessages(1)  # severity of warning or higher
+        arcpy.AddError(msgs)
+
+    except:
+        # Get the traceback object
+        tb = sys.exc_info()[2]
+        tbinfo = traceback.format_tb(tb)[-1]
+        errinfo = str(sys.exc_info()[1])
+
+        # Concatenate information together concerning the error into a message string
+        pymsg = "*PYTHON ERRORS*:\nTraceback info:\n" + tbinfo + "\nError Info:\n" + errinfo
+        msgs = "\n*ArcPy ERRORS*:\n" + arcpy.GetMessages(1) + "\n"
+
+        # Return python error messages for use in script tool or Python Window
+        arcpy.AddError(pymsg)
+        arcpy.AddError(msgs)
