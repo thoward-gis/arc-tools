@@ -114,11 +114,17 @@ if __name__ == '__main__':
     try:
         # Get parameters
         in_polyline = arcpy.GetParameterAsText(0)
-        create_new = arcpy.GetParameterAsText(1)
+        create_new = arcpy.GetParameter(1)
         output_fc = arcpy.GetParameterAsText(2)
+        # Check coordinate system
+        if arcpy.Describe(in_polyline).spatialReference.type == 'Projected':
+            arcpy.AddError(
+                " *ERROR* Input is using a Projected coordinate system. Please use a an input that uses a Geographic coordinated system.")
+            sys.exit(1)
         # Create new output feature class if user specifies
-        if create_new and create_new != 'false':
+        if create_new:
             in_polyline = arcpy.CopyFeatures_management(in_polyline, output_fc)
+
         # Calculate endpoint coordinates    
         calc_endpoint_coord(in_polyline)
         arcpy.AddMessage("Done!")
