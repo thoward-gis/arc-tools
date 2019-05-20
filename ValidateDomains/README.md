@@ -4,5 +4,8 @@ Geoprocessing tool that checks attribute values in all fields in a feature class
 
 ### Parameters
 
-**Input datasets** | *Feature Class* | required input
-* The input feature class.
+**Input dataset** | *Table or Feature Class* | required input
+* The input table or feature class.
+
+**Ignore NULL Values** | *Boolean* | required input
+* Optionally ignore NULL values if fields with domains applied.
