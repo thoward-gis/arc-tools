@@ -119,7 +119,8 @@ if __name__ == '__main__':
         # Check coordinate system
         if arcpy.Describe(in_polyline).spatialReference.type == 'Projected':
             arcpy.AddError(
-                " *ERROR* Input is using a Projected coordinate system. Please use a an input that uses a Geographic coordinated system.")
+                """ *ERROR* Input is using a Projected coordinate system. Please use a an input that uses a Geographic coordinate system.
+                Example: Try using Project tool to reproject data to WGS84""")
             sys.exit(1)
         # Create new output feature class if user specifies
         if create_new:
@@ -128,9 +129,9 @@ if __name__ == '__main__':
         # Calculate endpoint coordinates    
         calc_endpoint_coord(in_polyline)
         arcpy.AddMessage("Done!")
-    
-    except Exception as e:
-        arcpy.AddError("ERROR! Unhandled exception! Exception: {}".format(str(e)))
+
+    except:
+        arcpy.AddError('*ERROR* Unhandled exception!\n{}'.format(str(traceback.format_exc())))
         # clean up new feature class if exists
         if arcpy.Exists(output_fc):
             arcpy.Delete_management(output_fc)
